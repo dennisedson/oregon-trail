@@ -241,6 +241,14 @@ summary:focus-visible {
   animation: trail-loading-dots 1.2s steps(4, end) infinite;
 }
 
+.trail-chat-loading::after {
+  content: "";
+  display: inline-block;
+  width: 1.4em;
+  text-align: left;
+  animation: trail-loading-dots 1.2s steps(4, end) infinite;
+}
+
 .wagon-moving {
   animation: wagon-lurch 1.05s steps(6, end);
 }
@@ -402,6 +410,7 @@ summary:focus-visible {
   .trail-wagon-token-moving .trail-wagon-wheel,
   .telegraph-signal span,
   .trail-loading-dots::after,
+  .trail-chat-loading::after,
   .dysentery-graphic {
     animation: none;
     transition: none;

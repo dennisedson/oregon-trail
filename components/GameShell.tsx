@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Mail, RotateCcw } from "lucide-react";
+import { ExternalLink, Mail, Menu, MessageSquare, RotateCcw, X } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { CommandDeck } from "@/components/CommandDeck";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/DeveloperConsole";
 import { DysenteryGraphic } from "@/components/DysenteryGraphic";
 import { ResourceBar } from "@/components/ResourceBar";
+import { TrailChat } from "@/components/TrailChat";
 import { TrailMap } from "@/components/TrailMap";
 import {
   getActionsForState,
@@ -39,7 +40,7 @@ const initialDeveloperReport: DeveloperReport = {
 };
 
 const openingNarrative =
-  "The hiring manager reaches Independence, MO, where a green-screen guide waits beside a well-labeled wagon. The trail is pointed toward Anthropic Valley, but the candidate manifest must be loaded before the guide can cite real provisions.";
+  "The hiring manager reaches Independence, MO, where a green-screen guide waits beside a well-labeled wagon. The trail is pointed toward Developer Valley, but the candidate manifest must be loaded before the guide can cite real provisions.";
 
 const contactHandleParts = ["dennis", "dennisedson", "com"];
 
@@ -53,6 +54,8 @@ export function GameShell() {
   const [actions, setActions] = useState(() => getActionsForState(initialTrailState));
   const [pendingAction, setPendingAction] = useState<TrailActionId | null>(null);
   const [wagonMotionId, setWagonMotionId] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const milestone = MILESTONES[state.currentMilestone];
   const gameOver = state.currentMilestone === "dysentery";
@@ -176,12 +179,46 @@ export function GameShell() {
   return (
     <main className="min-h-screen bg-black px-3 py-6 text-trail-ink sm:px-6 lg:py-10">
       <div className="crt-screen mx-auto max-w-7xl bg-trail-green p-4 shadow-crt sm:p-8">
-        <header className="border-b-8 border-black pb-4 text-center">
+        <header className="relative border-b-8 border-black pb-4 text-center">
+          <div className="absolute right-0 top-0 z-30 text-left">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((current) => !current)}
+              className="pixel-border bg-trail-panel p-2 transition hover:bg-white"
+              aria-expanded={menuOpen}
+              aria-controls="trail-menu"
+              aria-label="Open trail menu"
+            >
+              {menuOpen ? (
+                <X aria-hidden="true" className="h-7 w-7" />
+              ) : (
+                <Menu aria-hidden="true" className="h-7 w-7" />
+              )}
+            </button>
+            {menuOpen ? (
+              <div
+                id="trail-menu"
+                className="pixel-border absolute right-0 mt-2 w-72 bg-trail-panel p-2 text-2xl uppercase shadow-crt"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChatOpen(true);
+                    setMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 border-b-2 border-dotted border-black px-2 py-3 text-left transition hover:bg-white"
+                >
+                  <MessageSquare aria-hidden="true" className="h-6 w-6" />
+                  Chat About Bio
+                </button>
+              </div>
+            ) : null}
+          </div>
           <h1 className="text-5xl uppercase leading-none sm:text-7xl lg:text-8xl">
             Dennis Edson's
           </h1>
           <p className="mt-2 text-3xl uppercase leading-none sm:text-4xl">
-            The Devloper Trail
+            The Developer Trail
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-2xl uppercase">
             <button
@@ -340,9 +377,10 @@ export function GameShell() {
           <DeveloperConsole report={developerReport} />
 
           <footer className="border-t-4 border-black pt-4 text-center text-2xl uppercase">
-            Anthropic Valley: 2,040 Miles / Trail Guide Standing By
+            Developer Valley: 2,040 Miles / Trail Guide Standing By
           </footer>
         </div>
+        <TrailChat open={chatOpen} onClose={() => setChatOpen(false)} />
       </div>
     </main>
   );

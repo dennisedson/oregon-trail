@@ -10,7 +10,7 @@ const vt323 = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "Dennis Edson | The Anthropic Trail",
+  title: "Dennis Edson's Developer Trail",
   description: "Dennis Edson's Oregon Trail-style interactive candidate agent."
 };
 
