@@ -1,6 +1,6 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
+import { ExternalLink, Mail, RotateCcw } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { CommandDeck } from "@/components/CommandDeck";
 import {
@@ -40,6 +40,8 @@ const initialDeveloperReport: DeveloperReport = {
 
 const openingNarrative =
   "The hiring manager reaches Independence, MO, where a green-screen guide waits beside a well-labeled wagon. The trail is pointed toward Anthropic Valley, but the candidate manifest must be loaded before the guide can cite real provisions.";
+
+const contactHandleParts = ["dennis", "dennisedson", "com"];
 
 export function GameShell() {
   const [sessionId, setSessionId] = useState("pending");
@@ -166,13 +168,40 @@ export function GameShell() {
     setWagonMotionId((motionId) => motionId + 1);
   }
 
+  function openEmail() {
+    const [name, domain, tld] = contactHandleParts;
+    window.location.href = `mailto:${name}@${domain}.${tld}`;
+  }
+
   return (
     <main className="min-h-screen bg-black px-3 py-6 text-trail-ink sm:px-6 lg:py-10">
       <div className="crt-screen mx-auto max-w-7xl bg-trail-green p-4 shadow-crt sm:p-8">
         <header className="border-b-8 border-black pb-4 text-center">
-          <h1 className="text-4xl uppercase leading-none sm:text-5xl">
-            The Anthropic Trail
+          <h1 className="text-5xl uppercase leading-none sm:text-7xl lg:text-8xl">
+            Dennis Edson's
           </h1>
+          <p className="mt-2 text-3xl uppercase leading-none sm:text-4xl">
+            The Anthropic Trail
+          </p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-2xl uppercase">
+            <button
+              type="button"
+              onClick={openEmail}
+              className="pixel-border inline-flex items-center gap-2 bg-trail-panel px-3 py-2 leading-none transition hover:bg-white"
+            >
+              <Mail aria-hidden="true" className="h-6 w-6" />
+              Send Telegraph
+            </button>
+            <a
+              href="https://www.linkedin.com/in/dennisedson"
+              target="_blank"
+              rel="noreferrer"
+              className="pixel-border inline-flex items-center gap-2 bg-trail-panel px-3 py-2 leading-none text-trail-ink transition hover:bg-white"
+            >
+              <ExternalLink aria-hidden="true" className="h-6 w-6" />
+              LinkedIn
+            </a>
+          </div>
         </header>
 
         <div className="space-y-4 pt-4">
