@@ -302,10 +302,10 @@ export function GameShell() {
                   </ol>
                 ) : null}
               </section>
-
-              <DeveloperConsole report={developerReport} />
             </div>
           </div>
+
+          <DeveloperConsole report={developerReport} />
 
           <footer className="border-t-4 border-black pt-4 text-center text-2xl uppercase">
             Anthropic Valley: 2,040 Miles / Trail Guide Standing By
