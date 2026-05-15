@@ -7,6 +7,7 @@ import {
   DeveloperConsole,
   type DeveloperReport
 } from "@/components/DeveloperConsole";
+import { DysenteryGraphic } from "@/components/DysenteryGraphic";
 import { ResourceBar } from "@/components/ResourceBar";
 import { TrailMap } from "@/components/TrailMap";
 import {
@@ -273,11 +274,14 @@ export function GameShell() {
                         Awaiting Reply
                       </p>
                     </div>
+                  ) : gameOver ? (
+                    <DysenteryGraphic
+                      message="The trail records cite excess technical debt."
+                      className="mx-auto max-w-3xl"
+                    />
                   ) : (
                     <p className="terminal-text max-h-96 overflow-auto pr-2 text-2xl leading-tight sm:text-3xl lg:max-h-[24rem] lg:text-2xl xl:text-3xl">
-                      {gameOver
-                        ? "You have died of dysentery. The trail records cite excess technical debt."
-                        : narrative}
+                      {narrative}
                     </p>
                   )}
                 </div>
