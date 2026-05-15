@@ -1,0 +1,54 @@
+import { Terminal } from "lucide-react";
+
+export type DeveloperReport = {
+  mode: string;
+  model: string;
+  systemPrompt: string;
+  debugNotes: string[];
+  warnings: string[];
+};
+
+export function DeveloperConsole({ report }: { report: DeveloperReport }) {
+  return (
+    <details className="pixel-border bg-black text-trail-green">
+      <summary className="flex cursor-pointer items-center gap-3 px-4 py-3 text-2xl uppercase">
+        <Terminal aria-hidden="true" className="h-7 w-7" />
+        Developer Console
+      </summary>
+      <div className="space-y-4 border-t-4 border-trail-green p-4">
+        <div className="grid gap-3 text-xl sm:grid-cols-2">
+          <p>
+            Mode: <span className="text-white">{report.mode}</span>
+          </p>
+          <p>
+            Model: <span className="text-white">{report.model}</span>
+          </p>
+        </div>
+        {report.warnings.length > 0 ? (
+          <div>
+            <h2 className="text-2xl uppercase text-white">Trail Warnings</h2>
+            <ul className="mt-2 list-inside list-square text-xl">
+              {report.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        <div>
+          <h2 className="text-2xl uppercase text-white">Guide Notes</h2>
+          <ul className="mt-2 list-inside list-square text-xl">
+            {report.debugNotes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h2 className="text-2xl uppercase text-white">System Prompt</h2>
+          <pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap border-2 border-trail-green p-3 text-lg leading-tight text-white">
+            {report.systemPrompt}
+          </pre>
+        </div>
+      </div>
+    </details>
+  );
+}
