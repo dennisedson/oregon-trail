@@ -29,10 +29,15 @@ export function CommandDeck({
             type="button"
             disabled={Boolean(pendingAction)}
             onClick={() => onAction(action.id)}
-            className="pixel-border group flex w-full items-center justify-between gap-4 bg-trail-panel px-4 py-3 text-left text-2xl uppercase leading-none transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-wait disabled:opacity-70"
+            className="pixel-border group flex w-full items-center justify-between gap-4 bg-trail-panel px-4 py-3 text-left uppercase transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-wait disabled:opacity-70"
           >
             <span className="min-w-0">
-              {index + 1}. {isPending ? "Sending Telegraph" : action.label}
+              <span className="block text-2xl leading-none">
+                {index + 1}. {isPending ? "Sending Telegraph" : action.label}
+              </span>
+              <span className="mt-1 block text-xl leading-none text-trail-darkGreen">
+                {isPending ? action.cue : action.cue}
+              </span>
             </span>
             <ArrowRight
               aria-hidden="true"

@@ -11,10 +11,15 @@ export type TrailActionId =
   | "review_portfolio"
   | "inspect_devex"
   | "set_pace"
+  | "rest_at_camp"
+  | "hunt_for_leadership"
   | "discuss_leadership"
   | "manager_test"
-  | "deescalate_risk"
-  | "refactor_wagon"
+  | "ford_river"
+  | "caulk_wagon"
+  | "take_ferry"
+  | "wait_for_conditions"
+  | "rest_before_pass"
   | "safety_alignment"
   | "pbc_alignment"
   | "final_pitch";
@@ -42,6 +47,7 @@ export type TrailGameState = {
 export type TrailAction = {
   id: TrailActionId;
   label: string;
+  cue: string;
   detail: string;
   milestone: MilestoneId;
   nextMilestone?: MilestoneId;
@@ -87,14 +93,16 @@ export const MILESTONES: Record<
 export const TRAIL_ACTIONS: TrailAction[] = [
   {
     id: "review_background",
-    label: "Review Background",
+    label: "Check Wagon Manifest",
+    cue: "Review background and education",
     detail: "Audit the candidate's origin story, education, and early practice.",
     milestone: "starting_outpost",
     resourceDelta: { morale: 5, techDebt: -3 }
   },
   {
     id: "review_portfolio",
-    label: "Review Portfolio",
+    label: "Hunt For Portfolio Proof",
+    cue: "Review portfolio and shipped artifacts",
     detail: "Inspect shipped developer education work and artifacts.",
     milestone: "starting_outpost",
     nextMilestone: "high_plains",
@@ -102,7 +110,8 @@ export const TRAIL_ACTIONS: TrailAction[] = [
   },
   {
     id: "inspect_devex",
-    label: "Inspect DX Philosophy",
+    label: "Talk With Trail Guide",
+    cue: "Discuss developer education philosophy",
     detail: "Ask how the guide turns complex APIs into teachable systems.",
     milestone: "starting_outpost",
     resourceDelta: { morale: 6, techDebt: -8 }
@@ -110,58 +119,108 @@ export const TRAIL_ACTIONS: TrailAction[] = [
   {
     id: "set_pace",
     label: "Set A Faster Pace",
+    cue: "Move quickly into leadership signal",
     detail: "Move briskly into the leadership portion of the trail.",
     milestone: "starting_outpost",
     nextMilestone: "high_plains",
     resourceDelta: { budget: -6, morale: -2, techDebt: 8 }
   },
   {
-    id: "discuss_leadership",
-    label: "Discuss Leadership",
-    detail: "Probe team leadership, editorial judgment, and cross-functional work.",
+    id: "rest_at_camp",
+    label: "Sleep At Camp",
+    cue: "Probe sustainable leadership style",
+    detail: "Pause the party to inspect team health, communication style, and sustainable leadership habits.",
     milestone: "high_plains",
-    resourceDelta: { morale: 7, techDebt: -4 }
+    resourceDelta: { budget: -3, morale: 10, techDebt: -3 }
+  },
+  {
+    id: "hunt_for_leadership",
+    label: "Hunt For Leadership Proof",
+    cue: "Find concrete technical leadership evidence",
+    detail: "Look for concrete evidence of technical leadership, editorial judgment, and cross-functional influence.",
+    milestone: "high_plains",
+    resourceDelta: { budget: -4, morale: 7, techDebt: -5 }
+  },
+  {
+    id: "discuss_leadership",
+    label: "Trade For Spare Parts",
+    cue: "Discuss systems thinking and reusable DX assets",
+    detail: "Trade time and budget for stronger systems, reusable docs, and lower operational drag.",
+    milestone: "high_plains",
+    resourceDelta: { budget: -9, morale: 2, techDebt: -14 }
   },
   {
     id: "manager_test",
-    label: "Attempt Manager Test",
-    detail: "Cross a difficult Dev Ed river with scope, people, and stakes.",
+    label: "Scout The River",
+    cue: "Enter the manager test",
+    detail: "Approach a difficult Dev Ed management challenge with scope, people, and stakes.",
     milestone: "high_plains",
     nextMilestone: "river_crossing",
-    resourceDelta: { budget: -8, morale: 4, techDebt: 10 }
+    resourceDelta: { budget: -5, morale: 4, techDebt: 4 }
   },
   {
-    id: "deescalate_risk",
-    label: "Deescalate Risk",
-    detail: "Choose a measured plan that protects trust and delivery quality.",
+    id: "ford_river",
+    label: "Ford The River",
+    cue: "Choose the fast, high-risk management path",
+    detail: "Choose the fastest path through the manager test: decisive, direct, but risky for stakeholder trust and technical debt.",
     milestone: "river_crossing",
-    resourceDelta: { budget: -5, morale: 6, techDebt: -10 }
+    nextMilestone: "anthropic_valley",
+    resourceDelta: { morale: 3, techDebt: 26 }
   },
   {
-    id: "refactor_wagon",
-    label: "Refactor The Wagon",
-    detail: "Pay down technical debt before the trail gets steep.",
+    id: "caulk_wagon",
+    label: "Caulk The Wagon",
+    cue: "Align scope and protect delivery quality",
+    detail: "Seal the plan before crossing: align scope, clarify roles, and protect the work from avoidable leaks.",
     milestone: "river_crossing",
-    resourceDelta: { budget: -10, morale: -1, techDebt: -22 }
+    nextMilestone: "anthropic_valley",
+    resourceDelta: { budget: -8, morale: 5, techDebt: 4 }
+  },
+  {
+    id: "take_ferry",
+    label: "Take The Ferry ($15)",
+    cue: "Spend budget to reduce people and delivery risk",
+    detail: "Spend budget for the safest manager-test crossing: sequence decisions, lower risk, and preserve trust.",
+    milestone: "river_crossing",
+    nextMilestone: "anthropic_valley",
+    resourceDelta: { budget: -15, morale: 8, techDebt: -12 }
+  },
+  {
+    id: "wait_for_conditions",
+    label: "Wait For Conditions",
+    cue: "Gather context before committing",
+    detail: "Delay the crossing to gather context, de-escalate risk, and pay down technical debt before committing.",
+    milestone: "river_crossing",
+    resourceDelta: { budget: -3, morale: -4, techDebt: -14 }
+  },
+  {
+    id: "rest_before_pass",
+    label: "Make Camp For The Night",
+    cue: "Reset before mission alignment",
+    detail: "Pause before the final mission-alignment leg to restore team morale and sharpen the hiring signal.",
+    milestone: "anthropic_valley",
+    resourceDelta: { budget: -3, morale: 9, techDebt: -2 }
   },
   {
     id: "safety_alignment",
-    label: "Test Safety Alignment",
+    label: "Check Safety Supplies",
+    cue: "Test safety and responsibility alignment",
     detail: "Examine how the candidate teaches capability with responsibility.",
-    milestone: "river_crossing",
-    nextMilestone: "anthropic_valley",
+    milestone: "anthropic_valley",
     resourceDelta: { morale: 10, techDebt: -5 }
   },
   {
     id: "pbc_alignment",
-    label: "Discuss PBC Mission",
+    label: "Consult Mission Compass",
+    cue: "Discuss Anthropic PBC mission fit",
     detail: "Ask how public benefit commitments shape developer education.",
     milestone: "anthropic_valley",
     resourceDelta: { morale: 8, techDebt: -6 }
   },
   {
     id: "final_pitch",
-    label: "Make Final Pitch",
+    label: "Take The Final Pass",
+    cue: "Make the final hiring case",
     detail: "Synthesize the trail evidence for the hiring decision.",
     milestone: "anthropic_valley",
     nextMilestone: "offer_camp",

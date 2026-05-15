@@ -72,5 +72,295 @@ summary:focus-visible {
 }
 
 .wagon {
+  position: relative;
   image-rendering: pixelated;
+}
+
+.trail-map-board {
+  border: 3px solid #000;
+  background: #efd9a5;
+  padding: 20px 18px 12px;
+}
+
+.trail-route-line {
+  position: relative;
+  height: 44px;
+}
+
+.trail-route-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22px;
+  border-top: 4px dotted #5a3b1d;
+}
+
+.trail-route-stop {
+  position: absolute;
+  top: 13px;
+  height: 20px;
+  width: 20px;
+  border: 3px solid #000;
+  border-radius: 999px;
+  background: #2c2c2c;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.trail-route-stop-passed {
+  background: #00b000;
+}
+
+.trail-route-stop-current {
+  background: #ff1d1d;
+}
+
+.trail-wagon-marker {
+  position: absolute;
+  top: 1px;
+  transform: translateX(-50%);
+  transition: left 0.9s steps(7, end);
+  z-index: 2;
+}
+
+.trail-wagon-token {
+  position: relative;
+  display: block;
+  height: 38px;
+  width: 52px;
+  image-rendering: pixelated;
+}
+
+.trail-wagon-token-moving {
+  animation: trail-token-bob 0.95s steps(5, end);
+}
+
+.trail-wagon-body {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  height: 20px;
+  width: 38px;
+  border: 3px solid #000;
+  background: #8b4f1e;
+}
+
+.trail-wagon-body::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  top: -13px;
+  height: 14px;
+  border: 3px solid #000;
+  border-bottom: 0;
+  background: #9c5d20;
+}
+
+.trail-wagon-wheel {
+  position: absolute;
+  bottom: 2px;
+  height: 12px;
+  width: 12px;
+  border: 3px solid #000;
+  border-radius: 999px;
+  background: #a45e1d;
+}
+
+.trail-wagon-token-moving .trail-wagon-wheel {
+  animation: wagon-wheel-spin 0.95s steps(8, end);
+}
+
+.trail-wagon-wheel-left {
+  left: 11px;
+}
+
+.trail-wagon-wheel-right {
+  right: 7px;
+}
+
+.trail-response-loading {
+  min-height: 190px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+}
+
+.telegraph-signal {
+  display: grid;
+  width: min(100%, 520px);
+  grid-template-columns: repeat(9, minmax(12px, 1fr));
+  gap: 8px;
+}
+
+.telegraph-signal span {
+  height: 14px;
+  border: 2px solid #000;
+  background: #00b000;
+  animation: telegraph-pulse 1.1s steps(2, end) infinite;
+  animation-delay: calc(var(--pulse-index) * 0.08s);
+}
+
+.trail-loading-copy strong {
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.trail-loading-dots::after {
+  content: "";
+  display: inline-block;
+  width: 1.4em;
+  text-align: left;
+  animation: trail-loading-dots 1.2s steps(4, end) infinite;
+}
+
+.wagon-moving {
+  animation: wagon-lurch 1.05s steps(6, end);
+}
+
+.wagon-wheel {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.wagon-moving .wagon-wheel {
+  animation: wagon-wheel-spin 1.05s steps(8, end);
+}
+
+.wagon-dust {
+  position: absolute;
+  bottom: 9px;
+  left: 24px;
+  height: 7px;
+  width: 13px;
+  border: 2px solid #000;
+  background: #efd9a5;
+  opacity: 0;
+}
+
+.wagon-dust-two {
+  bottom: 17px;
+  left: 8px;
+  width: 10px;
+}
+
+.wagon-dust-three {
+  bottom: 2px;
+  left: -5px;
+  width: 16px;
+}
+
+.wagon-moving .wagon-dust-one {
+  animation: wagon-dust 0.75s steps(4, end) 0.08s;
+}
+
+.wagon-moving .wagon-dust-two {
+  animation: wagon-dust 0.8s steps(4, end) 0.18s;
+}
+
+.wagon-moving .wagon-dust-three {
+  animation: wagon-dust 0.72s steps(4, end) 0.28s;
+}
+
+@keyframes wagon-lurch {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  18% {
+    transform: translateX(10px) translateY(-2px);
+  }
+  38% {
+    transform: translateX(24px) translateY(1px);
+  }
+  58% {
+    transform: translateX(36px) translateY(-3px);
+  }
+  78% {
+    transform: translateX(48px) translateY(0);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+@keyframes wagon-wheel-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes wagon-dust {
+  0% {
+    opacity: 0;
+    transform: translateX(18px) scale(0.75);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-22px) scale(1.15);
+  }
+}
+
+@keyframes trail-token-bob {
+  0% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-4px);
+  }
+  42% {
+    transform: translateY(2px);
+  }
+  66% {
+    transform: translateY(-3px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes telegraph-pulse {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes trail-loading-dots {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75%,
+  100% {
+    content: "...";
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wagon-moving,
+  .wagon-moving .wagon-wheel,
+  .wagon-moving .wagon-dust,
+  .trail-wagon-marker,
+  .trail-wagon-token-moving,
+  .trail-wagon-token-moving .trail-wagon-wheel,
+  .telegraph-signal span,
+  .trail-loading-dots::after {
+    animation: none;
+    transition: none;
+  }
 }

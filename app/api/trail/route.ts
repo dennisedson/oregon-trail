@@ -32,6 +32,40 @@ type ClaudeTrailPayload = {
   mode?: "live-claude" | "demo";
 };
 
+export async function GET() {
+  const warnings: string[] = [];
+  const debugNotes: string[] = [];
+  const bioResult = await loadBioManifest();
+
+  if (bioResult.bio) {
+    debugNotes.push(`bio.md loaded (${bioResult.bio.length.toLocaleString()} characters).`);
+  } else {
+    warnings.push("bio.md is missing. The wagon is running in demo mode.");
+  }
+
+  if (process.env.ANTHROPIC_API_KEY) {
+    debugNotes.push("ANTHROPIC_API_KEY loaded. Telegraph line is ready.");
+  } else {
+    warnings.push("ANTHROPIC_API_KEY is missing. Claude narration is mocked.");
+  }
+
+  if (getServerSupabaseClient()) {
+    debugNotes.push("Supabase credentials loaded. Session persistence is ready.");
+  } else {
+    warnings.push("Supabase credentials are missing. Session persistence is disabled.");
+  }
+
+  return NextResponse.json({
+    developer: {
+      mode: process.env.ANTHROPIC_API_KEY && bioResult.bio ? "ready-live" : "setup-needed",
+      model: CLAUDE_MODEL,
+      systemPrompt: TRAIL_SYSTEM_PROMPT,
+      debugNotes,
+      warnings
+    }
+  });
+}
+
 export async function POST(request: Request) {
   const warnings: string[] = [];
   const body = (await request.json().catch(() => null)) as TrailRequest | null;

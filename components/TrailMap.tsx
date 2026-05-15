@@ -1,10 +1,29 @@
 import { Map } from "lucide-react";
-import { MILESTONES, type TrailGameState } from "@/lib/game-state";
+import { MILESTONES, type MilestoneId, type TrailGameState } from "@/lib/game-state";
 
-export function TrailMap({ state }: { state: TrailGameState }) {
+const routeStops: Array<{
+  id: MilestoneId;
+  label: string;
+  progress: number;
+}> = [
+  { id: "starting_outpost", label: "Outpost", progress: 10 },
+  { id: "high_plains", label: "High Plains", progress: 38 },
+  { id: "river_crossing", label: "River", progress: 64 },
+  { id: "anthropic_valley", label: "Valley", progress: 88 },
+  { id: "offer_camp", label: "Offer", progress: 100 }
+];
+
+export function TrailMap({
+  state,
+  motionId
+}: {
+  state: TrailGameState;
+  motionId: number;
+}) {
   const milestone = MILESTONES[state.currentMilestone];
   const progress = milestone.progress;
   const isGameOver = state.currentMilestone === "dysentery";
+  const markerProgress = isGameOver ? 4 : progress;
 
   return (
     <section className="pixel-border bg-trail-panel p-4">
@@ -31,6 +50,44 @@ export function TrailMap({ state }: { state: TrailGameState }) {
             <span className="h-px flex-1 bg-trail-ink/50" />
           </div>
         ))}
+      </div>
+      <div className="trail-map-board mt-4" aria-label="Trail map">
+        <div className="trail-route-line">
+          {routeStops.map((stop) => {
+            const isPassed = progress >= stop.progress && !isGameOver;
+            const isCurrent = state.currentMilestone === stop.id;
+
+            return (
+              <span
+                key={stop.id}
+                className={`trail-route-stop ${
+                  isPassed ? "trail-route-stop-passed" : ""
+                } ${isCurrent ? "trail-route-stop-current" : ""}`}
+                style={{ left: `${stop.progress}%` }}
+                title={stop.label}
+              />
+            );
+          })}
+          <span
+            className="trail-wagon-marker"
+            style={{ left: `${markerProgress}%` }}
+          >
+            <span
+              key={motionId}
+              className={`trail-wagon-token ${
+                motionId > 0 ? "trail-wagon-token-moving" : ""
+              }`}
+            >
+              <span className="trail-wagon-body" />
+              <span className="trail-wagon-wheel trail-wagon-wheel-left" />
+              <span className="trail-wagon-wheel trail-wagon-wheel-right" />
+            </span>
+          </span>
+        </div>
+        <div className="mt-4 flex justify-between gap-2 text-lg uppercase leading-none">
+          <span>Independence</span>
+          <span>Anthropic Valley</span>
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { RotateCcw } from "lucide-react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { CommandDeck } from "@/components/CommandDeck";
 import {
   DeveloperConsole,
@@ -25,30 +26,38 @@ type TrailApiResponse = {
   developer: DeveloperReport;
 };
 
-const initialDeveloperReport: DeveloperReport = {
-  mode: "local-shell",
-  model: "claude-sonnet-4-6",
-  systemPrompt: "System prompt loads after the first trail action.",
-  debugNotes: [
-    "The shell is ready. Add bio.md and credentials to move from demo to live narration."
-  ],
-  warnings: ["bio.md has not been found in the project root yet."]
+type TrailStatusResponse = {
+  developer: DeveloperReport;
 };
+
+const initialDeveloperReport: DeveloperReport = {
+  mode: "checking",
+  model: "claude-sonnet-4-6",
+  systemPrompt: "System prompt loads after the startup check.",
+  debugNotes: ["Checking trail manifest and telegraph line."],
+  warnings: []
+};
+
+const openingNarrative =
+  "The hiring manager reaches Independence, MO, where a green-screen guide waits beside a well-labeled wagon. The trail is pointed toward Anthropic Valley, but the candidate manifest must be loaded before the guide can cite real provisions.";
 
 export function GameShell() {
   const [sessionId, setSessionId] = useState("pending");
   const [state, setState] = useState<TrailGameState>(initialTrailState);
-  const [narrative, setNarrative] = useState(
-    "The hiring manager reaches Independence, MO, where a green-screen guide waits beside a well-labeled wagon. The trail is pointed toward Anthropic Valley, but the candidate manifest must be loaded before the guide can cite real provisions."
-  );
+  const [narrative, setNarrative] = useState(openingNarrative);
   const [developerReport, setDeveloperReport] = useState<DeveloperReport>(
     initialDeveloperReport
   );
   const [actions, setActions] = useState(() => getActionsForState(initialTrailState));
   const [pendingAction, setPendingAction] = useState<TrailActionId | null>(null);
+  const [wagonMotionId, setWagonMotionId] = useState(0);
 
   const milestone = MILESTONES[state.currentMilestone];
   const gameOver = state.currentMilestone === "dysentery";
+  const pendingTrailAction = pendingAction
+    ? actions.find((action) => action.id === pendingAction)
+    : null;
+  const pendingActionLabel = pendingTrailAction?.label ?? "Trail Decision";
   const wagonStatus = useMemo(() => {
     if (gameOver) {
       return "DYSENTERY";
@@ -65,17 +74,57 @@ export function GameShell() {
     setSessionId(crypto.randomUUID());
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadTrailStatus() {
+      try {
+        const response = await fetch("/api/trail");
+        const data = (await response.json()) as TrailStatusResponse;
+
+        if (!response.ok) {
+          throw new Error("Wagon manifest check failed.");
+        }
+
+        if (isMounted) {
+          setDeveloperReport(data.developer);
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unknown trail status failure.";
+
+        if (isMounted) {
+          setDeveloperReport((current) => ({
+            ...current,
+            mode: "status-error",
+            warnings: [message]
+          }));
+        }
+      }
+    }
+
+    loadTrailStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   async function handleAction(actionId: TrailActionId) {
     setPendingAction(actionId);
+    setWagonMotionId((motionId) => motionId + 1);
 
     try {
+      const activeSessionId =
+        sessionId === "pending" ? crypto.randomUUID() : sessionId;
+
       const response = await fetch("/api/trail", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          sessionId,
+          sessionId: activeSessionId,
           actionId,
           state
         })
@@ -108,6 +157,15 @@ export function GameShell() {
     }
   }
 
+  function restartTrail() {
+    setSessionId(crypto.randomUUID());
+    setState(initialTrailState);
+    setNarrative(openingNarrative);
+    setActions(getActionsForState(initialTrailState));
+    setPendingAction(null);
+    setWagonMotionId((motionId) => motionId + 1);
+  }
+
   return (
     <main className="min-h-screen bg-black px-3 py-6 text-trail-ink sm:px-6 lg:py-10">
       <div className="crt-screen mx-auto max-w-5xl bg-trail-green p-4 shadow-crt sm:p-8">
@@ -119,31 +177,77 @@ export function GameShell() {
 
         <div className="space-y-4 pt-4">
           <ResourceBar resources={state.resources} />
-          <TrailMap state={state} />
+          <TrailMap state={state} motionId={wagonMotionId} />
 
           <section className="grid items-center gap-5 py-5 text-center">
-            <div className="wagon mx-auto h-24 w-40" aria-hidden="true">
+            <div
+              key={wagonMotionId}
+              className={`wagon mx-auto h-24 w-40 ${
+                wagonMotionId > 0 ? "wagon-moving" : ""
+              }`}
+              aria-hidden="true"
+            >
               <svg viewBox="0 0 160 96" role="img" className="h-full w-full">
                 <rect x="18" y="44" width="124" height="30" fill="#7a4618" stroke="#000" strokeWidth="4" />
                 <path d="M28 44 C45 18 111 18 132 44" fill="#9c5d20" stroke="#000" strokeWidth="4" />
                 <line x1="56" y1="44" x2="56" y2="74" stroke="#000" strokeWidth="3" />
                 <line x1="88" y1="44" x2="88" y2="74" stroke="#000" strokeWidth="3" />
-                <circle cx="42" cy="78" r="13" fill="#542f15" stroke="#000" strokeWidth="4" />
-                <circle cx="118" cy="78" r="13" fill="#542f15" stroke="#000" strokeWidth="4" />
-                <circle cx="42" cy="78" r="7" fill="#a45e1d" stroke="#000" strokeWidth="3" />
-                <circle cx="118" cy="78" r="7" fill="#a45e1d" stroke="#000" strokeWidth="3" />
+                <g className="wagon-wheel">
+                  <circle cx="42" cy="78" r="13" fill="#542f15" stroke="#000" strokeWidth="4" />
+                  <circle cx="42" cy="78" r="7" fill="#a45e1d" stroke="#000" strokeWidth="3" />
+                  <line x1="42" y1="65" x2="42" y2="91" stroke="#000" strokeWidth="2" />
+                  <line x1="29" y1="78" x2="55" y2="78" stroke="#000" strokeWidth="2" />
+                </g>
+                <g className="wagon-wheel">
+                  <circle cx="118" cy="78" r="13" fill="#542f15" stroke="#000" strokeWidth="4" />
+                  <circle cx="118" cy="78" r="7" fill="#a45e1d" stroke="#000" strokeWidth="3" />
+                  <line x1="118" y1="65" x2="118" y2="91" stroke="#000" strokeWidth="2" />
+                  <line x1="105" y1="78" x2="131" y2="78" stroke="#000" strokeWidth="2" />
+                </g>
               </svg>
+              <span className="wagon-dust wagon-dust-one" />
+              <span className="wagon-dust wagon-dust-two" />
+              <span className="wagon-dust wagon-dust-three" />
             </div>
 
             <div className="mx-auto w-full max-w-4xl border-4 border-trail-warning bg-trail-paper p-4">
               <p className="mx-auto mb-3 w-fit bg-black px-5 py-1 text-2xl uppercase text-trail-green">
                 {milestone.title}
               </p>
-              <p className="terminal-text max-h-96 overflow-auto pr-2 text-2xl leading-tight sm:text-3xl">
-                {gameOver
-                  ? "You have died of dysentery. The trail records cite excess technical debt."
-                  : narrative}
-              </p>
+              {pendingAction ? (
+                <div
+                  className="trail-response-loading mx-auto max-w-3xl"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <p className="text-3xl uppercase leading-none">Sending Telegraph</p>
+                  <div className="telegraph-signal" aria-hidden="true">
+                    {Array.from({ length: 9 }).map((_, index) => (
+                      <span
+                        key={index}
+                        style={
+                          {
+                            "--pulse-index": index
+                          } as CSSProperties
+                        }
+                      />
+                    ))}
+                  </div>
+                  <p className="trail-loading-copy text-2xl leading-tight sm:text-3xl">
+                    The guide is checking the wagon manifest for{" "}
+                    <strong>{pendingActionLabel}</strong>.
+                  </p>
+                  <p className="trail-loading-dots text-2xl uppercase">
+                    Awaiting Reply
+                  </p>
+                </div>
+              ) : (
+                <p className="terminal-text max-h-96 overflow-auto pr-2 text-2xl leading-tight sm:text-3xl">
+                  {gameOver
+                    ? "You have died of dysentery. The trail records cite excess technical debt."
+                    : narrative}
+                </p>
+              )}
             </div>
           </section>
 
@@ -157,7 +261,18 @@ export function GameShell() {
           </section>
 
           <section className="pixel-border bg-trail-panel p-4">
-            <h2 className="mb-3 text-3xl font-bold uppercase">Current Supplies</h2>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-3xl font-bold uppercase">Current Supplies</h2>
+              <button
+                type="button"
+                onClick={restartTrail}
+                disabled={Boolean(pendingAction)}
+                className="pixel-border inline-flex items-center gap-2 bg-trail-panel px-3 py-2 text-2xl uppercase leading-none transition hover:bg-white disabled:cursor-wait disabled:opacity-70"
+              >
+                <RotateCcw aria-hidden="true" className="h-6 w-6" />
+                Start Over
+              </button>
+            </div>
             <div className="grid gap-2 text-2xl sm:grid-cols-2">
               <p className="border-b-2 border-dotted border-black">
                 Wagon Status <strong className="float-right">{wagonStatus}</strong>
