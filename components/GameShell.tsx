@@ -181,7 +181,7 @@ export function GameShell() {
             Dennis Edson's
           </h1>
           <p className="mt-2 text-3xl uppercase leading-none sm:text-4xl">
-            The Anthropic Trail
+            The Devloper Trail
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-2xl uppercase">
             <button
