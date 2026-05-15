@@ -7,6 +7,7 @@ import {
   getActionById,
   getActionsForState,
   initialTrailState,
+  MILESTONES,
   type TrailAction,
   type TrailActionId,
   type TrailGameState
@@ -32,34 +33,35 @@ type ClaudeTrailPayload = {
   mode?: "live-claude" | "demo";
 };
 
+const MAX_REQUEST_BYTES = 32_768;
+const RATE_LIMIT_MAX = 20;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const requestBuckets = new Map<string, { count: number; resetAt: number }>();
+
 export async function GET() {
   const warnings: string[] = [];
   const debugNotes: string[] = [];
   const bioResult = await loadBioManifest();
+  const liveNarrationAvailable = Boolean(process.env.ANTHROPIC_API_KEY && bioResult.bio);
 
   if (bioResult.bio) {
-    debugNotes.push(`bio.md loaded (${bioResult.bio.length.toLocaleString()} characters).`);
+    debugNotes.push("Candidate manifest is available for trail narration.");
   } else {
-    warnings.push("bio.md is missing. The wagon is running in demo mode.");
+    warnings.push("Candidate manifest is unavailable. The wagon is using fallback narration.");
   }
 
-  if (process.env.ANTHROPIC_API_KEY) {
-    debugNotes.push("ANTHROPIC_API_KEY loaded. Telegraph line is ready.");
-  } else {
-    warnings.push("ANTHROPIC_API_KEY is missing. Claude narration is mocked.");
+  if (!process.env.ANTHROPIC_API_KEY) {
+    warnings.push("Live trail narration is unavailable. Local narration is enabled.");
   }
 
-  if (getServerSupabaseClient()) {
-    debugNotes.push("Supabase credentials loaded. Session persistence is ready.");
-  } else {
-    warnings.push("Supabase credentials are missing. Session persistence is disabled.");
+  if (!getServerSupabaseClient()) {
+    warnings.push("Trail journal saves are disabled for this run.");
   }
 
   return NextResponse.json({
     developer: {
-      mode: process.env.ANTHROPIC_API_KEY && bioResult.bio ? "ready-live" : "setup-needed",
+      mode: liveNarrationAvailable ? "live trail guide" : "local fallback",
       model: CLAUDE_MODEL,
-      systemPrompt: TRAIL_SYSTEM_PROMPT,
       debugNotes,
       warnings
     }
@@ -68,9 +70,32 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const warnings: string[] = [];
+  const sizeCheck = checkRequestSize(request);
+
+  if (sizeCheck) {
+    return sizeCheck;
+  }
+
+  const rateLimit = checkRateLimit(getClientKey(request));
+
+  if (rateLimit.limited) {
+    return NextResponse.json(
+      {
+        error: "The trail is crowded. Try this crossing again shortly.",
+        code: "TRAIL_RATE_LIMITED"
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds)
+        }
+      }
+    );
+  }
+
   const body = (await request.json().catch(() => null)) as TrailRequest | null;
   const sessionId = body?.sessionId || crypto.randomUUID();
-  const state = body?.state || initialTrailState;
+  const state = normalizeTrailState(body?.state);
 
   if (!body?.actionId) {
     return NextResponse.json(
@@ -93,16 +118,16 @@ export async function POST(request: Request) {
   const bioResult = await loadBioManifest();
 
   if (!bioResult.bio) {
-    warnings.push("bio.md is missing. The wagon is running in demo mode.");
+    warnings.push("Candidate manifest is unavailable. The wagon is using fallback narration.");
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
-    warnings.push("ANTHROPIC_API_KEY is missing. Claude narration is mocked.");
+    warnings.push("Live trail narration is unavailable. Local narration is enabled.");
   }
 
   const supabase = getServerSupabaseClient();
   if (!supabase) {
-    warnings.push("Supabase credentials are missing. Session persistence is disabled.");
+    warnings.push("Trail journal saves are disabled for this run.");
   }
 
   const liveMode = Boolean(process.env.ANTHROPIC_API_KEY && bioResult.bio);
@@ -120,7 +145,8 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      warnings.push(`Wagon axle broken: Supabase persistence failed (${error.message}).`);
+      console.error("Trail journal save failed", error);
+      warnings.push("Trail journal save failed for this turn.");
     }
   }
 
@@ -130,9 +156,8 @@ export async function POST(request: Request) {
     narrative: payload.narrative,
     actions: getActionsForState(nextState),
     developer: {
-      mode: payload.mode,
+      mode: payload.mode === "live-claude" ? "live trail guide" : "local fallback",
       model: CLAUDE_MODEL,
-      systemPrompt: TRAIL_SYSTEM_PROMPT,
       debugNotes: payload.debugNotes,
       warnings
     }
@@ -185,8 +210,8 @@ async function askClaude({
         ["Claude returned a response, but it did not include structured debug notes."]
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown Claude error";
-    warnings.push(`Telegraph jammed: Claude request failed (${message}).`);
+    console.error("Live trail narration request failed", error);
+    warnings.push("Live trail narration request failed. Local narration is enabled.");
     return buildDemoPayload(action, state, warnings);
   }
 }
@@ -232,10 +257,109 @@ function buildDemoPayload(
     mode: "demo",
     narrative: `The guide marks "${action.label}" in the ledger and studies the trail ahead. The real career manifest is not yet hitched to the wagon, so this demo beat keeps the game moving without inventing candidate facts.${gameOver}`,
     debugNotes: [
-      "Demo mode avoids hallucinating because bio.md is not available or Claude is not configured.",
+      "Fallback narration avoids inventing candidate facts when live trail context is unavailable.",
       `Applied resource delta: ${JSON.stringify(action.resourceDelta)}.`,
       `Current milestone: ${state.currentMilestone}.`,
       ...warnings.slice(0, 2)
     ]
   };
+}
+
+function checkRequestSize(request: Request) {
+  const contentLength = request.headers.get("content-length");
+
+  if (!contentLength) {
+    return null;
+  }
+
+  const requestBytes = Number(contentLength);
+
+  if (Number.isFinite(requestBytes) && requestBytes > MAX_REQUEST_BYTES) {
+    return NextResponse.json(
+      {
+        error: "The wagon manifest is too large for this trail crossing.",
+        code: "WAGON_MANIFEST_TOO_LARGE"
+      },
+      { status: 413 }
+    );
+  }
+
+  return null;
+}
+
+function getClientKey(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const realIp = request.headers.get("x-real-ip");
+
+  return forwardedFor?.split(",")[0]?.trim() || realIp || "local-trail";
+}
+
+function checkRateLimit(clientKey: string) {
+  const now = Date.now();
+  const bucket = requestBuckets.get(clientKey);
+
+  if (!bucket || bucket.resetAt <= now) {
+    cleanupRateLimitBuckets(now);
+    requestBuckets.set(clientKey, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS
+    });
+
+    return { limited: false, retryAfterSeconds: 0 };
+  }
+
+  bucket.count += 1;
+
+  if (bucket.count > RATE_LIMIT_MAX) {
+    return {
+      limited: true,
+      retryAfterSeconds: Math.ceil((bucket.resetAt - now) / 1000)
+    };
+  }
+
+  return { limited: false, retryAfterSeconds: 0 };
+}
+
+function cleanupRateLimitBuckets(now: number) {
+  for (const [key, bucket] of requestBuckets.entries()) {
+    if (bucket.resetAt <= now) {
+      requestBuckets.delete(key);
+    }
+  }
+}
+
+function normalizeTrailState(candidate: unknown): TrailGameState {
+  if (!candidate || typeof candidate !== "object") {
+    return initialTrailState;
+  }
+
+  const state = candidate as Partial<TrailGameState>;
+  const currentMilestone =
+    state.currentMilestone && state.currentMilestone in MILESTONES
+      ? state.currentMilestone
+      : initialTrailState.currentMilestone;
+  const resources =
+    state.resources && typeof state.resources === "object"
+      ? state.resources
+      : initialTrailState.resources;
+  const log = Array.isArray(state.log) ? state.log.slice(-25) : [];
+
+  return {
+    currentMilestone,
+    resources: {
+      budget: normalizeResource(resources.budget, initialTrailState.resources.budget),
+      morale: normalizeResource(resources.morale, initialTrailState.resources.morale),
+      techDebt: normalizeResource(
+        resources.techDebt,
+        initialTrailState.resources.techDebt
+      )
+    },
+    log
+  };
+}
+
+function normalizeResource(value: unknown, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.min(100, Math.max(0, Math.round(value)))
+    : fallback;
 }

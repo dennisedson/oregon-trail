@@ -34,7 +34,6 @@ type TrailStatusResponse = {
 const initialDeveloperReport: DeveloperReport = {
   mode: "checking",
   model: "claude-sonnet-4-6",
-  systemPrompt: "System prompt loads after the startup check.",
   debugNotes: ["Checking trail manifest and telegraph line."],
   warnings: []
 };

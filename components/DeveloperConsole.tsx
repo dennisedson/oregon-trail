@@ -3,7 +3,6 @@ import { Terminal } from "lucide-react";
 export type DeveloperReport = {
   mode: string;
   model: string;
-  systemPrompt: string;
   debugNotes: string[];
   warnings: string[];
 };
@@ -41,12 +40,6 @@ export function DeveloperConsole({ report }: { report: DeveloperReport }) {
               <li key={note}>{note}</li>
             ))}
           </ul>
-        </div>
-        <div>
-          <h2 className="text-2xl uppercase text-white">System Prompt</h2>
-          <pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap border-2 border-trail-green p-3 text-lg leading-tight text-white">
-            {report.systemPrompt}
-          </pre>
         </div>
       </div>
     </details>
