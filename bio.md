@@ -1,7 +1,7 @@
 # Dennis Edson — Bio (game source-of-truth)
 
 This file is the canonical bio for the "Meet Dennis" game. It is meant to be
-read by the Claude agent powering the game and used to answer the player when
+read by the AI guide powering the game and used to answer the player when
 they click an option on the trail.
 
 ---
@@ -172,7 +172,8 @@ changelog, the migrations video series, and the broader content roadmap.
 ## Topic: The Engine
 
 The Engine is what I call the multi-agent content production system I built
-on top of Claude. It is, in concept, a content team made out of AI agents.
+on top of a frontier language model. It is, in concept, a content team made
+out of AI agents.
 
 Here's the shape of it. A script for a video starts as a brief. An
 orchestrator agent dispatches it through a state machine — draft, review,

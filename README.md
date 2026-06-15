@@ -1,4 +1,4 @@
-# The Anthropic Trail
+# Dennis Edson's Developer Trail
 
 Interactive Oregon Trail-style candidate agent for the Developer Education Lead role.
 

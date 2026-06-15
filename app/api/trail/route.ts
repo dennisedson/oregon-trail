@@ -1,7 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { AI_MODEL, createAiText, getAiProviderApiKey } from "@/lib/ai-provider";
 import {
   applyActionToState,
   getActionById,
@@ -14,7 +14,6 @@ import {
 } from "@/lib/game-state";
 import {
   buildTrailUserPrompt,
-  CLAUDE_MODEL,
   TRAIL_SYSTEM_PROMPT
 } from "@/lib/prompts";
 import { getServerSupabaseClient } from "@/lib/supabase/server";
@@ -27,10 +26,10 @@ type TrailRequest = {
   state?: TrailGameState;
 };
 
-type ClaudeTrailPayload = {
+type AiTrailPayload = {
   narrative?: string;
   debugNotes?: string[];
-  mode?: "live-claude" | "demo";
+  mode?: "live-ai" | "demo";
 };
 
 const MAX_REQUEST_BYTES = 32_768;
@@ -42,7 +41,9 @@ export async function GET() {
   const warnings: string[] = [];
   const debugNotes: string[] = [];
   const bioResult = await loadBioManifest();
-  const liveNarrationAvailable = Boolean(process.env.ANTHROPIC_API_KEY && bioResult.bio);
+  const liveNarrationAvailable = Boolean(
+    getAiProviderApiKey() && AI_MODEL && bioResult.bio
+  );
 
   if (bioResult.bio) {
     debugNotes.push("Candidate manifest is available for trail narration.");
@@ -50,7 +51,7 @@ export async function GET() {
     warnings.push("Candidate manifest is unavailable. The wagon is using fallback narration.");
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!getAiProviderApiKey() || !AI_MODEL) {
     warnings.push("Live trail narration is unavailable. Local narration is enabled.");
   }
 
@@ -61,7 +62,6 @@ export async function GET() {
   return NextResponse.json({
     developer: {
       mode: liveNarrationAvailable ? "live trail guide" : "local fallback",
-      model: CLAUDE_MODEL,
       debugNotes,
       warnings
     }
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
     warnings.push("Candidate manifest is unavailable. The wagon is using fallback narration.");
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!getAiProviderApiKey() || !AI_MODEL) {
     warnings.push("Live trail narration is unavailable. Local narration is enabled.");
   }
 
@@ -130,9 +130,9 @@ export async function POST(request: Request) {
     warnings.push("Trail journal saves are disabled for this run.");
   }
 
-  const liveMode = Boolean(process.env.ANTHROPIC_API_KEY && bioResult.bio);
+  const liveMode = Boolean(getAiProviderApiKey() && AI_MODEL && bioResult.bio);
   const payload = liveMode
-    ? await askClaude({ action, state: nextState, bio: bioResult.bio!, warnings })
+    ? await askAiGuide({ action, state: nextState, bio: bioResult.bio!, warnings })
     : buildDemoPayload(action, nextState, warnings);
 
   if (supabase) {
@@ -156,15 +156,14 @@ export async function POST(request: Request) {
     narrative: payload.narrative,
     actions: getActionsForState(nextState),
     developer: {
-      mode: payload.mode === "live-claude" ? "live trail guide" : "local fallback",
-      model: CLAUDE_MODEL,
+      mode: payload.mode === "live-ai" ? "live trail guide" : "local fallback",
       debugNotes: payload.debugNotes,
       warnings
     }
   });
 }
 
-async function askClaude({
+async function askAiGuide({
   action,
   state,
   bio,
@@ -174,40 +173,25 @@ async function askClaude({
   state: TrailGameState;
   bio: string;
   warnings: string[];
-}): Promise<Required<ClaudeTrailPayload>> {
+}): Promise<Required<AiTrailPayload>> {
   try {
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY
-    });
-
-    const message = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 900,
+    const text = await createAiText({
+      maxTokens: 900,
       temperature: 0.7,
       system: TRAIL_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: buildTrailUserPrompt({ bio, action, state })
-        }
-      ]
+      prompt: buildTrailUserPrompt({ bio, action, state })
     });
 
-    const text = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n");
-
-    const parsed = parseClaudePayload(text);
+    const parsed = parseAiPayload(text);
 
     return {
-      mode: "live-claude",
+      mode: "live-ai",
       narrative:
         parsed.narrative ||
         "The guide studies the manifest, but the telegraph returns a garbled report.",
       debugNotes:
         parsed.debugNotes?.slice(0, 5) ||
-        ["Claude returned a response, but it did not include structured debug notes."]
+        ["The live guide returned a response, but it did not include structured debug notes."]
     };
   } catch (error) {
     console.error("Live trail narration request failed", error);
@@ -226,9 +210,9 @@ async function loadBioManifest() {
   }
 }
 
-function parseClaudePayload(text: string): ClaudeTrailPayload {
+function parseAiPayload(text: string): AiTrailPayload {
   try {
-    return JSON.parse(text) as ClaudeTrailPayload;
+    return JSON.parse(text) as AiTrailPayload;
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) {
@@ -236,7 +220,7 @@ function parseClaudePayload(text: string): ClaudeTrailPayload {
     }
 
     try {
-      return JSON.parse(match[0]) as ClaudeTrailPayload;
+      return JSON.parse(match[0]) as AiTrailPayload;
     } catch {
       return { narrative: text, debugNotes: [] };
     }
@@ -247,7 +231,7 @@ function buildDemoPayload(
   action: TrailAction,
   state: TrailGameState,
   warnings: string[]
-): Required<ClaudeTrailPayload> {
+): Required<AiTrailPayload> {
   const gameOver =
     state.currentMilestone === "dysentery"
       ? " Alas, tech debt has reached 100. The hiring party has died of dysentery."

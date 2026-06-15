@@ -9,7 +9,7 @@ const routeStops: Array<{
   { id: "starting_outpost", label: "Outpost", progress: 10 },
   { id: "high_plains", label: "High Plains", progress: 38 },
   { id: "river_crossing", label: "River", progress: 64 },
-  { id: "anthropic_valley", label: "Valley", progress: 88 },
+  { id: "developer_valley", label: "Valley", progress: 88 },
   { id: "offer_camp", label: "Offer", progress: 100 }
 ];
 
@@ -86,7 +86,7 @@ export function TrailMap({
         </div>
         <div className="mt-4 flex justify-between gap-2 text-lg uppercase leading-none">
           <span>Independence</span>
-          <span>Anthropic Valley</span>
+          <span>Developer Valley</span>
         </div>
       </div>
     </section>

@@ -1,21 +1,21 @@
-PROJECT_SPEC: The Anthropic Trail (Interactive Resume)
+PROJECT_SPEC: The Developer Trail (Interactive Resume)
 1. Vision & Purpose
-The Mission: Build an interactive, web-based "candidate agent" for a Developer Education Lead position at Anthropic.
+The Mission: Build an interactive, web-based "candidate agent" for Developer Education Lead roles.
 The Theme: A 1980s retro "Oregon Trail" style game. The user (a Hiring Manager) navigates a career journey instead of a geographic one.
-The "Flex": This project must demonstrate elite prompt engineering, developer experience (DX) principles, and mastery of the Anthropic Claude API.
+The "Flex": This project must demonstrate strong prompt engineering, developer experience (DX) principles, and practical live AI integration.
 
 2. Tech Stack
 Framework: Next.js 14+ (App Router), Tailwind CSS.
 
-AI Engine: Anthropic Claude 3.5 Sonnet (via SDK).
+AI Engine: Live AI provider behind a server-side adapter, with local fallback narration.
 
 Backend/DB: Supabase (PostgreSQL) for session persistence and "game state."
 
 Styling: Retro-terminal aesthetic (Font: VT323, Colors: CRT Green on Black).
 
 3. Core Components & Logic
-A. The "Game Master" (LLM)
-Role: Claude 3.5 Sonnet acts as the narrator and engine.
+A. The "Game Master" (AI Guide)
+Role: A live AI guide acts as the narrator and engine.
 
 Knowledge Base: Uses bio.md (in root) containing my full professional history, achievements, and educational philosophy.
 
@@ -31,7 +31,7 @@ Primary View: A terminal-style output window for narrative text.
 
 The "Command Deck": - 3-4 dynamic action buttons (e.g., "Review Portfolio," "Discuss Management Style").
 
-A hidden "Developer Console" that reveals the raw system prompt and Claude's "thinking" process (demonstrating transparency and interpretability).
+A hidden "Developer Console" that reveals safe runtime notes and fallback warnings without exposing prompts, provider details, or secrets.
 
 4. Milestone Map (The Trail)
 The Starting Outpost: Background and Education.
@@ -40,12 +40,12 @@ The High Plains: Previous major roles and technical leadership.
 
 The River Crossing: Handling complex Dev Ed challenges (The "Manager Test").
 
-The Anthropic Valley: Alignment with Anthropic’s mission (Safety, PBC status).
+The Developer Valley: Alignment with mission, responsibility, and teaching judgment.
 
 5. Development Guidelines (For the Coding Agent)
 Modular Code: Keep API routes, Supabase clients, and UI components strictly separated.
 
-System Prompting: The system_prompt for Claude should be stored in a dedicated lib/prompts.ts file for easy iteration.
+System Prompting: The trail guide prompt should be stored in a dedicated lib/prompts.ts file for easy iteration.
 
 Error Handling: Gracefully handle API rate limits or Supabase connection issues with retro-themed error messages (e.g., "Wagon Axle Broken: 500 Internal Server Error").
 

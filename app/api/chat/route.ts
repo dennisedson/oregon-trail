@@ -1,8 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { CLAUDE_MODEL } from "@/lib/prompts";
+import { AI_MODEL, createAiText, getAiProviderApiKey } from "@/lib/ai-provider";
 
 export const runtime = "nodejs";
 
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!getAiProviderApiKey() || !AI_MODEL) {
     return NextResponse.json({
       answer:
         "Live trail chat is unavailable right now. The guide cannot answer bio questions without the manifest telegraph."
@@ -84,26 +83,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY
-    });
-    const response = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 520,
+    const answer = await createAiText({
+      maxTokens: 520,
       temperature: 0.2,
       system: CHAT_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: buildChatPrompt({ bio, messages, latestQuestion: latestQuestion.content })
-        }
-      ]
+      prompt: buildChatPrompt({ bio, messages, latestQuestion: latestQuestion.content })
     });
-    const answer = response.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n")
-      .trim();
 
     return NextResponse.json({
       answer:

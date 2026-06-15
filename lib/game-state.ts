@@ -2,7 +2,7 @@ export type MilestoneId =
   | "starting_outpost"
   | "high_plains"
   | "river_crossing"
-  | "anthropic_valley"
+  | "developer_valley"
   | "offer_camp"
   | "dysentery";
 
@@ -73,8 +73,8 @@ export const MILESTONES: Record<
     location: "Manager Test",
     progress: 64
   },
-  anthropic_valley: {
-    title: "The Anthropic Valley",
+  developer_valley: {
+    title: "The Developer Valley",
     location: "Mission Alignment",
     progress: 88
   },
@@ -164,7 +164,7 @@ export const TRAIL_ACTIONS: TrailAction[] = [
     cue: "Choose the fast, high-risk management path",
     detail: "Choose the fastest path through the manager test: decisive, direct, but risky for stakeholder trust and technical debt.",
     milestone: "river_crossing",
-    nextMilestone: "anthropic_valley",
+    nextMilestone: "developer_valley",
     resourceDelta: { morale: 3, techDebt: 26 }
   },
   {
@@ -173,7 +173,7 @@ export const TRAIL_ACTIONS: TrailAction[] = [
     cue: "Align scope and protect delivery quality",
     detail: "Seal the plan before crossing: align scope, clarify roles, and protect the work from avoidable leaks.",
     milestone: "river_crossing",
-    nextMilestone: "anthropic_valley",
+    nextMilestone: "developer_valley",
     resourceDelta: { budget: -8, morale: 5, techDebt: 4 }
   },
   {
@@ -182,7 +182,7 @@ export const TRAIL_ACTIONS: TrailAction[] = [
     cue: "Spend budget to reduce people and delivery risk",
     detail: "Spend budget for the safest manager-test crossing: sequence decisions, lower risk, and preserve trust.",
     milestone: "river_crossing",
-    nextMilestone: "anthropic_valley",
+    nextMilestone: "developer_valley",
     resourceDelta: { budget: -15, morale: 8, techDebt: -12 }
   },
   {
@@ -198,7 +198,7 @@ export const TRAIL_ACTIONS: TrailAction[] = [
     label: "Make Camp For The Night",
     cue: "Reset before mission alignment",
     detail: "Pause before the final mission-alignment leg to restore team morale and sharpen the hiring signal.",
-    milestone: "anthropic_valley",
+    milestone: "developer_valley",
     resourceDelta: { budget: -3, morale: 9, techDebt: -2 }
   },
   {
@@ -206,15 +206,15 @@ export const TRAIL_ACTIONS: TrailAction[] = [
     label: "Check Safety Supplies",
     cue: "Test safety and responsibility alignment",
     detail: "Examine how the candidate teaches capability with responsibility.",
-    milestone: "anthropic_valley",
+    milestone: "developer_valley",
     resourceDelta: { morale: 10, techDebt: -5 }
   },
   {
     id: "pbc_alignment",
     label: "Consult Mission Compass",
-    cue: "Discuss Anthropic PBC mission fit",
+    cue: "Discuss mission and responsibility fit",
     detail: "Ask how public benefit commitments shape developer education.",
-    milestone: "anthropic_valley",
+    milestone: "developer_valley",
     resourceDelta: { morale: 8, techDebt: -6 }
   },
   {
@@ -222,7 +222,7 @@ export const TRAIL_ACTIONS: TrailAction[] = [
     label: "Take The Final Pass",
     cue: "Make the final hiring case",
     detail: "Synthesize the trail evidence for the hiring decision.",
-    milestone: "anthropic_valley",
+    milestone: "developer_valley",
     nextMilestone: "offer_camp",
     resourceDelta: { morale: 12, techDebt: -4 }
   }

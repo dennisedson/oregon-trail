@@ -2,7 +2,6 @@ import { Terminal } from "lucide-react";
 
 export type DeveloperReport = {
   mode: string;
-  model: string;
   debugNotes: string[];
   warnings: string[];
 };
@@ -15,12 +14,9 @@ export function DeveloperConsole({ report }: { report: DeveloperReport }) {
         Developer Console
       </summary>
       <div className="space-y-4 border-t-4 border-trail-green p-4">
-        <div className="grid gap-3 text-xl sm:grid-cols-2">
+        <div className="grid gap-3 text-xl">
           <p>
             Mode: <span className="text-white">{report.mode}</span>
-          </p>
-          <p>
-            Model: <span className="text-white">{report.model}</span>
           </p>
         </div>
         {report.warnings.length > 0 ? (
